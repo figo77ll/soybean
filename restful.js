@@ -298,31 +298,32 @@ function api_getHotels(req, res, next) {
 
 function api_getRoomImage(req, res, next) {
 	// this serves as the API doc
-	var arrivalDate = req.params.arrivalDate;
-	var departureDate = req.params.departureDate;
-	var pid = req.params.pid;
+	var r = new Object();
+	r.arrivalDate = req.params.arrivalDate;
+	r.departureDate = req.params.departureDate;
+	r.pid = req.params.pid;
 
-	var hotelName = req.params.name;
-	var hotelStars = req.params.stars;
-	var city = req.params.city;
-	var address = req.params.address;
-	var roomDescription = req.params.roomDescription;
+	r.hotelName = req.params.name;
+	r.hotelStars = req.params.stars;
+	r.city = req.params.city;
+	r.address = req.params.address;
+	r.roomDescription = req.params.roomDescription;
 	// planner user id
-	var price = req.params.price;
+	r.price = req.params.price;
 
-	var roomTypeCode = req.params.roomTypeCode;
-	var hotelId = req.params.hotelId;
-	console.log("code: " + roomTypeCode + " - hotelId: " + hotelId);
+	r.roomTypeCode = req.params.roomTypeCode;
+	r.hotelId = req.params.hotelId;
+	console.log("r: " + r);
 
 	var getImageOptions = {
 		host: 'api.ean.com',
 		port: '80',
-		path: '/ean-services/rs/hotel/v3/roomImages?&minorRev=22&apiKey=7tu87e3uys7v6wmh4v9tgye9&customerUserAgent=MOBILE_SITE&locale=en_US&hotelId=' + hotelId,
+		path: '/ean-services/rs/hotel/v3/roomImages?&minorRev=22&apiKey=7tu87e3uys7v6wmh4v9tgye9&customerUserAgent=MOBILE_SITE&locale=en_US&hotelId=' + r.hotelId,
 		headers: {
 			'Content-Type': 'application/json; charset=utf-8',
 			'Content-Length': 0 
 		},
-		targetCode : roomTypeCode,
+		target: r,
 		responseObject : res
 	};
 	// retrieve room images
@@ -334,6 +335,8 @@ function api_getRoomImage(req, res, next) {
 			msg += chunk;
 		});
 
+		r = getImageOptions.target;
+
 		res.on('end', function() {
 			console.log("####");
 			var response = new Object();
@@ -344,7 +347,7 @@ function api_getRoomImage(req, res, next) {
 
 			function getRoomImageURL(jRoomImage) {
 				//console.log("code: " + jRoomImage.roomTypeCode + " vs. " + getImageOptions.targetCode);
-				if (jRoomImage.roomTypeCode == getImageOptions.targetCode) {
+				if (jRoomImage.roomTypeCode == r.roomTypeCode) {
 					console.log("Find match!");
 					console.log(jRoomImage.url);
 					return jRoomImage.url;
@@ -370,13 +373,12 @@ function api_getRoomImage(req, res, next) {
 				// at this point we have all the data to construct the hotel listings
 				var hotelDetails_page = fs.readFileSync('./Hotel_details.html');
 				// encoding make it return a string
-				var hotelImage = '<img src="'+ imageURL +'">';
 				//console.log(listings_page);
 				var document = jsdom.jsdom(hotelDetails_page);
 		        var window = document.createWindow();
 		        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
 		        	console.log('@@@@@@');
-		        	console.log(response);
+		        	//console.log(response);
 			        //window.$('html').html(page);
 		        	//console.log('in jsdom ' + window.$('html').html());
 	                //window.$('h2').html("Content Added to DOM by Node.js Server");
@@ -384,14 +386,41 @@ function api_getRoomImage(req, res, next) {
 	                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
                 	console.log('templating..');
 	                	//console.log(response[i]);
-						//hotelHtml = mustache.to_html(hotelTemplate, response[i]);
 						//console.log('hotelHtml ' + hotelHtml);
 						//console.log('hotel: ' + hotelHtml);
 	                    //window.$('#hotelList').append('<li><h2>test</h2></li>');
-                    window.$('#roomslot').append('<h2>' + hotelName + '</h2>');
-                    window.$('#roomslot').append('<p>' + roomDescription + '</p>');
-                    window.$('#roomslot').append(hotelImage);
-                    window.$('#roomslot').append('<h4>' + price + '</h4>');
+                    window.$('#roomslot').append('<h2>' + r.hotelName + '</h2>');
+                    window.$('#roomslot').append('<p>Room type: ' + r.roomDescription + '</p>');
+                    window.$('#roomslot').append('<img src="'+ imageURL +'">');
+                    window.$('#roomslot').append('<h4>$' + r.price + 'incl. tax</h4>');
+
+/*
+	r.arrivalDate = req.params.arrivalDate;
+	r.departureDate = req.params.departureDate;
+	r.pid = req.params.pid;
+
+	r.hotelName = req.params.name;
+	r.hotelStars = req.params.stars;
+	r.city = req.params.city;
+	r.address = req.params.address;
+	r.roomDescription = req.params.roomDescription;
+	// planner user id
+	r.price = req.params.price;
+
+	r.roomTypeCode = req.params.roomTypeCode;
+	r.hotelId = req.params.hotelId;
+	*/
+	                window.$('#room').append('<input type="hidden" name="pid" value="' + r.pid + '">');
+	                window.$('#room').append('<input type="hidden" name="arrivalDate" value="' + r.arrivalDate + '">');
+	                window.$('#room').append('<input type="hidden" name="departureDate" value="' + r.departureDate + '">');
+	                window.$('#room').append('<input type="hidden" name="name" value="' + r.hotelName + '">');
+	                window.$('#room').append('<input type="hidden" name="stars" value="' + r.hotelStars+ '">');
+	                window.$('#room').append('<input type="hidden" name="city" value="' + r.city + '">');
+	                window.$('#room').append('<input type="hidden" name="address" value="' + r.address + '">');
+	                window.$('#room').append('<input type="hidden" name="roomDescription" value="' + r.roomDescription + '">');
+	                window.$('#room').append('<input type="hidden" name="roomPic" value="' + imageURL + '">');
+	                window.$('#room').append('<input type="hidden" name="price" value="' + r.price + '">');
+                //window.$('#form').append("<label>" + doc.email +"</label>");
 	                //window.$('#form').append("<label>" + doc.email +"</label>");
 	                //window.$('#form').data('data', {'email' : doc.email});
 	                //var myData = $('#form').data('data');
@@ -401,6 +430,8 @@ function api_getRoomImage(req, res, next) {
 	                getImageOptions.responseObject.end("<!DOCTYPE html>\n" + window.$('html').html());	
 	                console.log(window.$('html').text());
 	        });
+			} else {
+				console.log("image not found");
 			}
 
 			//getImageOptions.responseObject.send({ 'imageURL' : imageURL});
@@ -457,7 +488,10 @@ function api_plannerBook(req, res, next) {
 
 	});
 
-	res.send({ status: 'ok'});
+	html = fs.readFileSync('./Trip_posted.html');
+    res.writeHeader(200, {"Content-Type": "text/html"});  
+    res.write(html);  
+    res.end();
 }
 
 function api_getBookings(req, res, next) {
@@ -483,7 +517,41 @@ function api_getBookings(req, res, next) {
 
 		collection.find({'city': city}).toArray(function(err, items) {
 			console.log(items);
-			res.send( items );
+			//res.send( items );
+			// at this point we have all the data to construct the hotel listings
+			var listings_page = fs.readFileSync('./Trip_list.html');
+			// encoding make it return a string
+			tripTemplate = fs.readFileSync('./TripTemplate.html', 'utf-8');
+			//var hotelTemplate = '<li><h2>{{name}}</h2></li>';
+			//console.log(listings_page);
+			var document = jsdom.jsdom(listings_page);
+	        var window = document.createWindow();
+	        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
+	        	console.log('@@@@@@');
+	        	//console.log(response);
+		        //window.$('html').html(page);
+	        	//console.log('in jsdom ' + window.$('html').html());
+                //window.$('h2').html("Content Added to DOM by Node.js Server");
+                //for (var i=0; i < products.length; i++) {
+                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
+                for (var i=0; i < items.length; i++) {
+                	console.log('templating..');
+                	console.log(items[i]);
+					var tripHtml = mustache.to_html(tripTemplate, items[i]);
+					//console.log('hotelHtml ' + hotelHtml);
+					//console.log('hotel: ' + hotelHtml);
+                    //window.$('#hotelList').append('<li><h2>test</h2></li>');
+                    window.$('#form').append(tripHtml);
+                }
+                //window.$('#form').append("<label>" + doc.email +"</label>");
+                //window.$('#form').data('data', {'email' : doc.email});
+                //var myData = $('#form').data('data');
+                //console.log(myData);  
+                //}
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end("<!DOCTYPE html>\n" + window.$('html').html());	
+                //console.log(window.$('html').text());
+	        });
 		});
 
 	});
@@ -542,8 +610,8 @@ server.post('/search/', api_postSearch);
 server.get('/profile/get/user/', api_getUser);
 server.post('/planHotel/', api_getHotels);
 server.get('/roomDetails/', api_getRoomImage);
-server.post('/planner/book/', api_plannerBook);
-server.get('/follower/get/bookings/', api_getBookings);
+server.post('/plannerBook/', api_plannerBook);
+server.post('/followTrip/', api_getBookings);
 server.get('/follower/book/', api_followerBook);
 
 server.listen(8080, function() {
