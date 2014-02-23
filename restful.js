@@ -31,9 +31,11 @@ function api_getHotels(req, res, next) {
 		headers: {
 			'Content-Type': 'application/json; charset=utf-8',
 			'Content-Length': 0 
-		}
+		},
+		responseObject : res
 	};
 
+	// call expedia and fill the response JSON object
 	var expediaReq = http.request(options, function(res) {
 		var msg = '';
 
@@ -43,16 +45,30 @@ function api_getHotels(req, res, next) {
 		});
 
 		res.on('end', function() {
+			var response = new Array();
+
 			//console.log(JSON.parse(msg));
 			//console.log(msg);
 			console.log("^^^^^^^ ^^^^^^^^^");
-			var jHotel = JSON.parse(msg);
-			var jHotelList = jHotel.HotelListResponse.HotelList.HotelSummary
+			var jHotelRes = JSON.parse(msg);
+			var jHotelList = jHotelRes.HotelListResponse.HotelList.HotelSummary
 			//console.log(jHotelList);
 
 			for (var i in jHotelList) {
+				response[i] = new Object();
+				var jHotel = jHotelList[i];
+
 				var jRoomList = jHotelList[i].RoomRateDetailsList.RoomRateDetails;
-				console.log('>>>>> ' + jHotelList[i].name);
+
+				console.log('>>>>> ' + jHotel.name);
+				console.log(jHotel.address1);
+				jHotel.thumbNailUrl = 'http://images.travelnow.com/' + jHotel.thumbNailUrl;
+				console.log(jHotel.thumbNailUrl);
+
+				response[i].name = jHotel.name;
+				response[i].address = jHotel.address1;
+				response[i].hotelPicture = jHotel.thumbNailUrl;
+
 				//console.log(jHotelList[i]);
 				//console.log(jRoomList);
 				for (var j in jRoomList) {
@@ -74,18 +90,38 @@ function api_getHotels(req, res, next) {
 					// we are only interested in two beds per room
 					if (roomDescription.indexOf('2') != -1) {
 						console.log(roomDescription);
+						response[i].roomDescription = roomDescription;
+
+						var jRateInfos = jRoomDetails.RateInfos;
+						var jChargeRateDetails = null;
+						if (isArray(jRateInfos)) {
+							console.log("not supported: multi rate");
+						} else {
+							jChargeRateDetails = jRateInfos.RateInfo.ChargeableRateInfo;
+							console.log(jChargeRateDetails);
+							for (var key in jChargeRateDetails) {
+								if (key == '@total') {
+									var price = jChargeRateDetails[key];
+									console.log("total: " + jChargeRateDetails[key]);
+									response[i].priceTotalIncludeTax = price;
+								}
+							}
+							//response[i].priceIncludeTax = jChargeRateDetails.total;
+						}
 					}
 				}
 				console.log('<<<<<');
 			}
+
+
+			console.log("response " + response);
+			options.responseObject.send(response);
 		});
 	});
 
 	expediaReq.write("");
 	expediaReq.end();
-
-	// call expedia to get hotel room listings
-
+/*
     res.send(
       	{
       		hotels : 
@@ -94,12 +130,13 @@ function api_getHotels(req, res, next) {
 	     			"name" : "W Hotel",
 	      			"location" : req.params.location,
 	      			"RoomDescription" : "Two Queens",
-	      			"Price" : "$998",
+	      			"PriceIncludeTax" : "$998",
 	      			"Stars" : "4"
 	      		}
 	      	]
 	      }
 	);
+*/
 }
 
 var server = restify.createServer();
