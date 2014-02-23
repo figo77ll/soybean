@@ -54,8 +54,8 @@ function api_getHotels(req, res, next) {
 			var jHotelList = jHotelRes.HotelListResponse.HotelList.HotelSummary
 			//console.log(jHotelList);
 
+			var k = 0;
 			for (var i in jHotelList) {
-				response[i] = new Object();
 				var jHotel = jHotelList[i];
 
 				var jRoomList = jHotelList[i].RoomRateDetailsList.RoomRateDetails;
@@ -64,10 +64,6 @@ function api_getHotels(req, res, next) {
 				console.log(jHotel.address1);
 				jHotel.thumbNailUrl = 'http://images.travelnow.com/' + jHotel.thumbNailUrl;
 				console.log(jHotel.thumbNailUrl);
-
-				response[i].name = jHotel.name;
-				response[i].address = jHotel.address1;
-				response[i].hotelPicture = jHotel.thumbNailUrl;
 
 				//console.log(jHotelList[i]);
 				//console.log(jRoomList);
@@ -88,9 +84,9 @@ function api_getHotels(req, res, next) {
 					var roomDescription = roomType.BedType.description;
 					//console.log(roomDescription);
 					// we are only interested in two beds per room
-					if (roomDescription.indexOf('2') != -1) {
+					if (roomDescription.match(/[2-5]/gi) != null) {
+					//if (roomDescription.indexOf('2') != -1) {
 						console.log(roomDescription);
-						response[i].roomDescription = roomDescription;
 
 						var jRateInfos = jRoomDetails.RateInfos;
 						var jChargeRateDetails = null;
@@ -103,10 +99,17 @@ function api_getHotels(req, res, next) {
 								if (key == '@total') {
 									var price = jChargeRateDetails[key];
 									console.log("total: " + jChargeRateDetails[key]);
-									response[i].priceTotalIncludeTax = price;
+
+									response[k] = new Object();
+									response[k].name = jHotel.name;
+									response[k].stars = jHotel.hotelRating;
+									response[k].address = jHotel.address1;
+									response[k].hotelPicture = jHotel.thumbNailUrl;
+									response[k].roomDescription = roomDescription;
+									response[k].priceTotalIncludeTax = price;
+									k++;
 								}
 							}
-							//response[i].priceIncludeTax = jChargeRateDetails.total;
 						}
 					}
 				}
