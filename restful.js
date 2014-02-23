@@ -10,7 +10,7 @@ function isArray(what) {
 
 function api_getLanding(req, res, next) {
 	// simply return the landing page	
-	html = fs.readFileSync('./WebContent2/Login.html');
+	html = fs.readFileSync('./WebContent/Login.html');
     res.writeHeader(200, {"Content-Type": "text/html"});  
     res.write(html);  
     res.end();
@@ -362,6 +362,9 @@ var server = restify.createServer();
 server.use(restify.queryParser()); // to support hotel?location=...
 server.use(restify.bodyParser());
 
+server.get(/\/public\/?.*/, restify.serveStatic({
+  directory: './WebContent'
+}));
 server.get('/landing/', api_getLanding);
 server.get('/profile/get/user/', api_getUser);
 server.get('/planner/get/hotels/', api_getHotels);
