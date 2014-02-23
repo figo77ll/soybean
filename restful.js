@@ -485,7 +485,7 @@ server.post('/search/', api_postSearch);
 
 // restful
 server.get('/profile/get/user/', api_getUser);
-server.post('/hotels/', api_getHotels);
+server.post('/planHotel/', api_getHotels);
 server.get('/roomDetails/', api_getRoomImage);
 server.post('/planner/book/', api_plannerBook);
 server.get('/follower/get/bookings/', api_getBookings);
