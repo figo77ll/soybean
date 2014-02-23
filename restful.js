@@ -10,8 +10,30 @@ function isArray(what) {
 // e.g. Mark
 function api_getUser(req, res, next) {
 	// call our internal db to get user profile
+	uid = req.params.uid;
 
-    res.send({user : req.params.name});
+	console.log('uid ' + uid);
+	// Retrieve
+	var MongoClient = require('mongodb').MongoClient;
+
+	// Connect to the db
+	MongoClient.connect("mongodb://localhost:27017/soybean", function(err, db) {
+		console.log('connecting to mongdb..');
+	 	if(err) {
+	 	 	console.log("fail to connect to mongdb");
+	 		return console.dir(err); 
+	 	}
+
+	  	var collection = db.collection('profiles');
+
+		collection.find({'uid': uid}).toArray(function(err, items) {
+			console.log(items);
+			doc = items[0];
+			console.log(doc);
+			res.send( doc );
+		});
+
+	});
 }
 
 // return a list of hotels given location, start/end dates
@@ -210,12 +232,99 @@ function api_plannerBook(req, res, next) {
 	var roomDescription = req.params.roomDescription;
 	var arrivalDate = req.params.arrivalDate;
 	var departureDate = req.params.departureDate;
-	var userId = req.params.uid;
+	// planner user id
+	var pid = req.params.pid;
 	var price = req.params.price;
 
 	console.log("planner booking: " + hotelName + " " + hotelStars + " " + city + " " + address);
-	console.log(req);
+	//console.log(req);
+
+	// Retrieve
+	var MongoClient = require('mongodb').MongoClient;
+
+	// Connect to the db
+	MongoClient.connect("mongodb://localhost:27017/soybean", function(err, db) {
+		console.log('connecting to mongdb..');
+	 	if(err) {
+	 		console.log("fail to connect to mongdb");
+	 		return console.dir(err); 
+	 	}
+
+	  	var collection = db.collection('trips');
+	  	var trip = { 'hotelName' : hotelName, 'hotelStars' : hotelStars, 'city' : city, 
+	  				 'address' : address, 'hotelPic' : hotelPic, 'roomPic' : roomPic,
+	  				 'roomDescription' : roomDescription, 'arrivalDate' : arrivalDate,
+	  				 'departureDate' : departureDate, 'pid' : pid, 'price' : price} ;
+
+	  	collection.insert(trip, {w:1}, function(err, result) {
+	  		if (err)
+		  		console.log('fail to insert: ' + err + result)
+	  	});
+
+	});
+
 	res.send({ status: 'ok'});
+}
+
+function api_getBookings(req, res, next) {
+	// all of these are required fields
+	var city = req.params.city;
+	var arrivalDate = req.params.arrivalDate;
+	var departureDate = req.params.departureDate;
+
+	console.log('city' + city + 'arrival' + arrivalDate + 'departureDate' + departureDate);
+
+	// Retrieve
+	var MongoClient = require('mongodb').MongoClient;
+
+	// Connect to the db
+	MongoClient.connect("mongodb://localhost:27017/soybean", function(err, db) {
+		console.log('connecting to mongdb..');
+	 	if(err) {
+	 	 	console.log("fail to connect to mongdb");
+	 		return console.dir(err); 
+	 	}
+
+	  	var collection = db.collection('trips');
+
+		collection.find({'city': city}).toArray(function(err, items) {
+			console.log(items);
+			res.send( items );
+		});
+
+	});
+
+}
+
+function api_followerBook(req, res, next) {
+	var _id = req.params._id;
+	var fid = req.params.fid;
+
+	console.log('_id ' + _id + ' fid ' + fid);
+
+	// Retrieve
+	var MongoClient = require('mongodb').MongoClient;
+
+	// Connect to the db
+	MongoClient.connect("mongodb://localhost:27017/soybean", function(err, db) {
+		console.log('connecting to mongdb..');
+	 	if(err) {
+	 	 	console.log("fail to connect to mongdb");
+	 		return console.dir(err); 
+	 	}
+
+	  	var collection = db.collection('trips');
+	  	var ObjectId = require('mongodb').ObjectID;
+
+		collection.find({'_id':ObjectId(_id)}).toArray(function(err, items) {
+			doc = items[0]; // should only be one
+			// once we find the entry we append the fid
+			collection.update(doc, {$set : {'fid' : fid}}, {w:1}, function(err, result) {});
+			console.log(items);
+			res.send( doc );
+		});
+
+	});
 }
 
 var server = restify.createServer();
@@ -223,10 +332,12 @@ var server = restify.createServer();
 server.use(restify.queryParser()); // to support hotel?location=...
 server.use(restify.bodyParser());
 
-server.get('/get/user/:name', api_getUser);
-server.get('/get/hotels/', api_getHotels);
-server.get('/get/roomImage/', api_getRoomImage);
-server.post('/book/planner/', api_plannerBook);
+server.get('/profile/get/user/', api_getUser);
+server.get('/planner/get/hotels/', api_getHotels);
+server.get('/planner/get/roomImage/', api_getRoomImage);
+server.post('/planner/book/', api_plannerBook);
+server.get('/follower/get/bookings/', api_getBookings);
+server.get('/follower/book/', api_followerBook);
 
 server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);
