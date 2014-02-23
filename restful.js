@@ -16,6 +16,66 @@ function api_getLanding(req, res, next) {
     res.end();
 }
 
+function api_postSearch(req, res, next) {
+
+	username = req.params.username;
+
+	console.log('username ' + username);
+	// Retrieve
+	var MongoClient = require('mongodb').MongoClient;
+
+	// Connect to the db
+	MongoClient.connect("mongodb://localhost:27017/soybean", function(err, db) {
+		console.log('connecting to mongdb..');
+	 	if(err) {
+	 	 	console.log("fail to connect to mongdb");
+	 		return console.dir(err); 
+	 	}
+
+	  	var collection = db.collection('profiles');
+
+		collection.find({'username': username}).toArray(function(err, items) {
+			console.log(items);
+			var doc = items[0];
+			console.log(doc);
+			//res.send( doc );
+
+			var page = fs.readFileSync('./Search.html');
+			console.log(page);
+			var document = jsdom.jsdom(page);
+	        var window = document.createWindow();
+	        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
+		        //window.$('html').html(page);
+	        	console.log('in jsdom ' + window.$('html').html());
+                //window.$('h2').html("Content Added to DOM by Node.js Server");
+                //for (var i=0; i < products.length; i++) {
+                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
+                console.log('doc email' + doc.email);
+                window.$('#form').append('<input type="hidden" name="date-submitted" value="' + doc.uid + '">');
+                //window.$('#form').append("<label>" + doc.email +"</label>");
+                //window.$('#form').data('data', {'email' : doc.email});
+                //var myData = $('#form').data('data');
+                //console.log(myData);  
+                //}
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end("<!DOCTYPE html>\n" + window.$('html').html());	
+                console.log(window.$('html').text());
+	        });
+			//res.writeHeader(200, {"Content-Type": "text/html"});  
+			//res.write(html);
+		});
+
+	});
+
+
+/*
+	html = fs.readFileSync('./Search.html');
+    res.writeHeader(200, {"Content-Type": "text/html"});  
+    res.write(html);  
+    res.end();
+    */
+}
+
 // return a user profile given username
 // e.g. Mark
 function api_getUser(req, res, next) {
@@ -372,6 +432,9 @@ server.get(/\/samplePics\/?.*/, restify.serveStatic({
 
 // dynamic serving
 server.get('/landing/', api_getLanding);
+server.post('/search/', api_postSearch);
+
+// restful
 server.get('/profile/get/user/', api_getUser);
 server.get('/planner/get/hotels/', api_getHotels);
 server.get('/planner/get/roomImage/', api_getRoomImage);
