@@ -107,7 +107,11 @@ function api_getHotels(req, res, next) {
 									response[k].hotelPicture = jHotel.thumbNailUrl;
 									response[k].roomDescription = roomDescription;
 									response[k].priceTotalIncludeTax = price;
+									response[k].roomTypeCode = jRoomDetails.roomTypeCode;
 									k++;
+
+									console.log("target roomTypeCode: " + jRoomDetails.roomTypeCode);
+									console.log("hotel id: " + jHotel.hotelId);
 								}
 							}
 						}
@@ -124,22 +128,75 @@ function api_getHotels(req, res, next) {
 
 	expediaReq.write("");
 	expediaReq.end();
-/*
-    res.send(
-      	{
-      		hotels : 
-	      	[
-	      		{
-	     			"name" : "W Hotel",
-	      			"location" : req.params.location,
-	      			"RoomDescription" : "Two Queens",
-	      			"PriceIncludeTax" : "$998",
-	      			"Stars" : "4"
-	      		}
-	      	]
-	      }
-	);
-*/
+}
+
+function api_getRoomImage(req, res, next) {
+	// this serves as the API doc
+	var roomTypeCode = req.params.roomTypeCode;
+	var hotelId = req.params.hotelId;
+	console.log("code: " + roomTypeCode + " - hotelId: " + hotelId);
+
+	var getImageOptions = {
+		host: 'api.ean.com',
+		port: '80',
+		path: '/ean-services/rs/hotel/v3/roomImages?&minorRev=22&apiKey=7tu87e3uys7v6wmh4v9tgye9&customerUserAgent=MOBILE_SITE&locale=en_US&hotelId=' + hotelId,
+		headers: {
+			'Content-Type': 'application/json; charset=utf-8',
+			'Content-Length': 0 
+		},
+		targetCode : roomTypeCode,
+		responseObject : res
+	};
+	// retrieve room images
+	var imageRequest = http.request(getImageOptions, function(res) {
+		console.log("Got response: " + res.statusCode);
+		var msg = '';
+		res.setEncoding('utf8');
+		res.on('data', function(chunk) {
+			msg += chunk;
+		});
+
+		res.on('end', function() {
+			console.log("####");
+			var response = new Object();
+			//console.log(msg);
+			// filer by rootTypeCode
+			var jRoomImages = JSON.parse(msg).HotelRoomImageResponse.RoomImages.RoomImage;
+			console.log(jRoomImages);
+
+			function getRoomImageURL(jRoomImage) {
+				//console.log("code: " + jRoomImage.roomTypeCode + " vs. " + getImageOptions.targetCode);
+				if (jRoomImage.roomTypeCode == getImageOptions.targetCode) {
+					console.log("Find match!");
+					console.log(jRoomImage.url);
+					return jRoomImage.url;
+				} else {
+					return "";
+				}
+			}
+
+			var imageURL;
+			if (isArray(jRoomImages)){
+				for (var i in jRoomImages) {
+					imageURL = getRoomImageURL(jRoomImages[i]);
+					if (imageURL != "") {
+						break
+					}
+				}
+			} else {
+				imageURL = getRoomImageURL(jRoomImages);
+			}
+
+			getImageOptions.responseObject.send({ 'imageURL' : imageURL});
+		});
+	});
+
+	imageRequest.on('error', function(e) {
+	 	console.log("Got error: " + e.message);
+	});
+
+	imageRequest.write("");
+	imageRequest.end();
 }
 
 var server = restify.createServer();
@@ -148,6 +205,7 @@ server.use(restify.queryParser()); // to support hotel?location=...
 
 server.get('/get/user/:name', api_getUser);
 server.get('/get/hotels/', api_getHotels);
+server.get('/get/roomImage/', api_getRoomImage);
 
 server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);
