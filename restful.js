@@ -8,12 +8,12 @@ function isArray(what) {
     return Object.prototype.toString.call(what) === '[object Array]';
 }
 
-function api_getLanding() {
+function api_getLanding(req, res, next) {
 	// simply return the landing page	
-	html = fs.readFile('./WebContent/login.html');
-    response.writeHeader(200, {"Content-Type": "text/html"});  
-    response.write(html);  
-    response.end();
+	html = fs.readFileSync('./WebContent2/Login.html');
+    res.writeHeader(200, {"Content-Type": "text/html"});  
+    res.write(html);  
+    res.end();
 }
 
 // return a user profile given username
