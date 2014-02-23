@@ -18,11 +18,13 @@
             <h1>Search Posted Trips</h1>
       </div><!-- /header -->
       <div data-role="content">
-      		<form id="form" name="search_posted_form" action="Hotel_list.html" data-ajax="false" method="POST">
+      		<form id="form" name="search_posted_form" action="/planner/get/hotels" data-ajax="false" method="POST">
 	      		<label>Where are you going?</label>
-	            <input type="text">
-	            <label>Date:</label>
-				<input type="date">
+	            <input type="text" name="city">
+	            <label>Arrival Date:</label>
+				<input type="date" name="arrivalDate">
+	            <label>Departure Date:</label>
+				<input type="date" name="departureDate">
 				<label>
 	            	<input type="checkbox" name="hotel">I want to book a hotel room myself
 	            </label>

@@ -130,10 +130,11 @@ function api_getUser(req, res, next) {
 // e.g. new york
 function api_getHotels(req, res, next) {
 	// this serves as the API doc
-	var arrivalDate = req.params.arrivalDate;
-	var departureDate = req.params.departureDate;
-	console.log('ArrivalDate: ' + arrivalDate);
-	console.log('DepartureDate: ' + departureDate);
+	var moment = require('moment');
+	var arrivalDate = moment(req.params.arrivalDate).format('MM/DD/YYYY');
+	var departureDate = moment(req.params.departureDate).format('MM/DD/YYYY');
+	console.log('arrivalDate: ' + arrivalDate);
+	console.log('departureDate: ' + departureDate);
 
 	var options = {
 		host: 'api.ean.com',
@@ -436,7 +437,7 @@ server.post('/search/', api_postSearch);
 
 // restful
 server.get('/profile/get/user/', api_getUser);
-server.get('/planner/get/hotels/', api_getHotels);
+server.post('/planner/get/hotels/', api_getHotels);
 server.get('/planner/get/roomImage/', api_getRoomImage);
 server.post('/planner/book/', api_plannerBook);
 server.get('/follower/get/bookings/', api_getBookings);
