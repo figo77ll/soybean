@@ -104,6 +104,8 @@ function api_getHotels(req, res, next) {
 									response[k].name = jHotel.name;
 									response[k].stars = jHotel.hotelRating;
 									response[k].address = jHotel.address1;
+									response[k].city = jHotel.city;
+									response[k].stateProvinceCode = jHotel.stateProvinceCode;
 									response[k].hotelPicture = jHotel.thumbNailUrl;
 									response[k].roomDescription = roomDescription;
 									response[k].priceTotalIncludeTax = price;
@@ -120,8 +122,6 @@ function api_getHotels(req, res, next) {
 				console.log('<<<<<');
 			}
 
-
-			console.log("response " + response);
 			options.responseObject.send(response);
 		});
 	});
@@ -199,13 +199,34 @@ function api_getRoomImage(req, res, next) {
 	imageRequest.end();
 }
 
+function api_plannerBook(req, res, next) {
+	// all of these are required fields
+	var hotelName = req.params.name;
+	var hotelStars = req.params.stars;
+	var city = req.params.city;
+	var address = req.params.address;
+	var hotelPic = req.params.hotelPic;
+	var roomPic = req.params.roomPic;
+	var roomDescription = req.params.roomDescription;
+	var arrivalDate = req.params.arrivalDate;
+	var departureDate = req.params.departureDate;
+	var userId = req.params.uid;
+	var price = req.params.price;
+
+	console.log("planner booking: " + hotelName + " " + hotelStars + " " + city + " " + address);
+	console.log(req);
+	res.send({ status: 'ok'});
+}
+
 var server = restify.createServer();
 
 server.use(restify.queryParser()); // to support hotel?location=...
+server.use(restify.bodyParser());
 
 server.get('/get/user/:name', api_getUser);
 server.get('/get/hotels/', api_getHotels);
 server.get('/get/roomImage/', api_getRoomImage);
+server.post('/book/planner/', api_plannerBook);
 
 server.listen(8080, function() {
     console.log('%s listening at %s', server.name, server.url);
