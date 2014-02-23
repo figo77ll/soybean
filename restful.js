@@ -517,7 +517,41 @@ function api_getBookings(req, res, next) {
 
 		collection.find({'city': city}).toArray(function(err, items) {
 			console.log(items);
-			res.send( items );
+			//res.send( items );
+			// at this point we have all the data to construct the hotel listings
+			var listings_page = fs.readFileSync('./Trip_list.html');
+			// encoding make it return a string
+			tripTemplate = fs.readFileSync('./TripTemplate.html', 'utf-8');
+			//var hotelTemplate = '<li><h2>{{name}}</h2></li>';
+			//console.log(listings_page);
+			var document = jsdom.jsdom(listings_page);
+	        var window = document.createWindow();
+	        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
+	        	console.log('@@@@@@');
+	        	//console.log(response);
+		        //window.$('html').html(page);
+	        	//console.log('in jsdom ' + window.$('html').html());
+                //window.$('h2').html("Content Added to DOM by Node.js Server");
+                //for (var i=0; i < products.length; i++) {
+                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
+                for (var i=0; i < items.length; i++) {
+                	console.log('templating..');
+                	console.log(items[i]);
+					var tripHtml = mustache.to_html(tripTemplate, items[i]);
+					//console.log('hotelHtml ' + hotelHtml);
+					//console.log('hotel: ' + hotelHtml);
+                    //window.$('#hotelList').append('<li><h2>test</h2></li>');
+                    window.$('#form').append(tripHtml);
+                }
+                //window.$('#form').append("<label>" + doc.email +"</label>");
+                //window.$('#form').data('data', {'email' : doc.email});
+                //var myData = $('#form').data('data');
+                //console.log(myData);  
+                //}
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end("<!DOCTYPE html>\n" + window.$('html').html());	
+                //console.log(window.$('html').text());
+	        });
 		});
 
 	});
@@ -577,7 +611,7 @@ server.get('/profile/get/user/', api_getUser);
 server.post('/planHotel/', api_getHotels);
 server.get('/roomDetails/', api_getRoomImage);
 server.post('/plannerBook/', api_plannerBook);
-server.get('/follower/get/bookings/', api_getBookings);
+server.post('/followTrip/', api_getBookings);
 server.get('/follower/book/', api_followerBook);
 
 server.listen(8080, function() {
