@@ -10,7 +10,7 @@ function isArray(what) {
 
 function api_getLanding(req, res, next) {
 	// simply return the landing page	
-	html = fs.readFileSync('./WebContent/Login.html');
+	html = fs.readFileSync('./Login.html');
     res.writeHeader(200, {"Content-Type": "text/html"});  
     res.write(html);  
     res.end();
@@ -46,7 +46,7 @@ function api_getUser(req, res, next) {
 			console.log(page);
 			var document = jsdom.jsdom(page);
 	        var window = document.createWindow();
-	        jsdom.jQueryify(window, './WebContent/js/libs/jquery.js', function() {
+	        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
 		        //window.$('html').html(page);
 	        	console.log('in jsdom ' + window.$('html').html());
                 //window.$('h2').html("Content Added to DOM by Node.js Server");
@@ -362,9 +362,15 @@ var server = restify.createServer();
 server.use(restify.queryParser()); // to support hotel?location=...
 server.use(restify.bodyParser());
 
-server.get(/\/public\/?.*/, restify.serveStatic({
-  directory: './WebContent'
+// static serving
+server.get(/\/js\/?.*/, restify.serveStatic({
+  directory: './js'
 }));
+server.get(/\/samplePics\/?.*/, restify.serveStatic({
+  directory: './samplePics'
+}));
+
+// dynamic serving
 server.get('/landing/', api_getLanding);
 server.get('/profile/get/user/', api_getUser);
 server.get('/planner/get/hotels/', api_getHotels);
