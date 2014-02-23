@@ -2,6 +2,7 @@ var restify = require('restify');
 var http = require('http');
 var fs = require('fs');
 var jsdom = require('jsdom');
+var mustache= require('mustache');
 
 // helper functions
 function isArray(what) {
@@ -21,6 +22,17 @@ function api_postSearch(req, res, next) {
 	username = req.params.username;
 
 	console.log('username ' + username);
+
+	var view = {
+  title: "Joe",
+  calc: function () {
+    return 2 + 4;
+  }
+};
+
+var output = mustache.render("{{title}} spends {{calc}}", view);
+console.log("MU: " + output);
+
 	// Retrieve
 	var MongoClient = require('mongodb').MongoClient;
 
@@ -223,10 +235,11 @@ function api_getHotels(req, res, next) {
 									response[k].roomDescription = roomDescription;
 									response[k].priceTotalIncludeTax = price;
 									response[k].roomTypeCode = jRoomDetails.roomTypeCode;
-									k++;
-
 									console.log("target roomTypeCode: " + jRoomDetails.roomTypeCode);
 									console.log("hotel id: " + jHotel.hotelId);
+									response[k].hotelId = jHotel.hotelId;
+									k++;
+
 								}
 							}
 						}
@@ -235,7 +248,42 @@ function api_getHotels(req, res, next) {
 				console.log('<<<<<');
 			}
 
-			options.responseObject.send(response);
+			// at this point we have all the data to construct the hotel listings
+			var listings_page = fs.readFileSync('./Hotel_list.html');
+			// encoding make it return a string
+			hotelTemplate = fs.readFileSync('./Hotel_listingTemplate.html', 'utf-8');
+			//var hotelTemplate = '<li><h2>{{name}}</h2></li>';
+			//console.log(listings_page);
+			var document = jsdom.jsdom(listings_page);
+	        var window = document.createWindow();
+	        jsdom.jQueryify(window, './js/libs/jquery.js', function() {
+	        	console.log('@@@@@@');
+	        	console.log(response);
+		        //window.$('html').html(page);
+	        	//console.log('in jsdom ' + window.$('html').html());
+                //window.$('h2').html("Content Added to DOM by Node.js Server");
+                //for (var i=0; i < products.length; i++) {
+                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
+                for (var i=0; i < response.length; i++) {
+                	console.log('templating..');
+                	console.log(response[i]);
+					hotelHtml = mustache.to_html(hotelTemplate, response[i]);
+					//console.log('hotelHtml ' + hotelHtml);
+					console.log('hotel: ' + hotelHtml);
+                    //window.$('#hotelList').append('<li><h2>test</h2></li>');
+                    window.$('#hotelList').append(hotelHtml);
+                }
+                //window.$('#form').append("<label>" + doc.email +"</label>");
+                //window.$('#form').data('data', {'email' : doc.email});
+                //var myData = $('#form').data('data');
+                //console.log(myData);  
+                //}
+                options.responseObject.writeHead(200, {'Content-Type': 'text/html'});
+                options.responseObject.end("<!DOCTYPE html>\n" + window.$('html').html());	
+                console.log(window.$('html').text());
+	        });
+
+			//options.responseObject.send(response);
 		});
 	});
 
@@ -437,8 +485,8 @@ server.post('/search/', api_postSearch);
 
 // restful
 server.get('/profile/get/user/', api_getUser);
-server.post('/planner/get/hotels/', api_getHotels);
-server.get('/planner/get/roomImage/', api_getRoomImage);
+server.post('/hotels/', api_getHotels);
+server.get('/roomDetails/', api_getRoomImage);
 server.post('/planner/book/', api_plannerBook);
 server.get('/follower/get/bookings/', api_getBookings);
 server.get('/follower/book/', api_followerBook);
