@@ -12,21 +12,35 @@
 </head>
 
 <body>
+<script type="text/javascript">
+function OnSubmitForm()
+{
+  if(document.pressed == 'Plan')
+  {
+   document.search_form.action ="Hotel_list.html";
+  }
+  else
+  if(document.pressed == 'Follow')
+  {
+    document.search_form.action ="Trip_list.html";
+  }
+  return true;
+}
+</script>
    
-<div id="search_posted" data-role="page" data-title="Search for Posted Trips">
+<div id="search" data-role="page" data-title="Search for Posted Trips">
       <div data-role="header">
             <h1>Search Posted Trips</h1>
       </div><!-- /header -->
       <div data-role="content">
-      		<form name="search_posted_form" action="Trip_list.html" data-ajax="false" method="POST">
+      		<form name="search_form" onSubmit="return OnSubmitForm();" data-ajax="false" method="POST">
 	      		<label>Where are you going?</label>
 	            <input type="text">
 	            <label>Date:</label>
 				<input type="date">
-				<label>
-	            <input type="submit" value="See posted Trips" data-theme="b">
+	            <INPUT TYPE="SUBMIT" name="Search" onClick="document.pressed=this.value" VALUE="Plan" data-theme="b">
+				<INPUT TYPE="SUBMIT" name="Search" onClick="document.pressed=this.value" VALUE="Follow" data-theme="e">
             </form>
-            <a href="Book_hotel.html" data-role="button" data-theme="e"> I want to book a hotel room</a>
       </div><!-- /content -->
 </div>
 
