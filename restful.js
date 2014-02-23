@@ -1,9 +1,19 @@
 var restify = require('restify');
 var http = require('http');
+var fs = require('fs');
+var jsdom = require('jsdom');
 
 // helper functions
 function isArray(what) {
     return Object.prototype.toString.call(what) === '[object Array]';
+}
+
+function api_getLanding() {
+	// simply return the landing page	
+	html = fs.readFile('./WebContent/login.html');
+    response.writeHeader(200, {"Content-Type": "text/html"});  
+    response.write(html);  
+    response.end();
 }
 
 // return a user profile given username
@@ -28,9 +38,29 @@ function api_getUser(req, res, next) {
 
 		collection.find({'uid': uid}).toArray(function(err, items) {
 			console.log(items);
-			doc = items[0];
+			var doc = items[0];
 			console.log(doc);
-			res.send( doc );
+			//res.send( doc );
+
+			var page = fs.readFileSync('./WebContent/profile.html');
+			console.log(page);
+			var document = jsdom.jsdom(page);
+	        var window = document.createWindow();
+	        jsdom.jQueryify(window, './WebContent/js/libs/jquery.js', function() {
+		        //window.$('html').html(page);
+	        	console.log('in jsdom ' + window.$('html').html());
+                //window.$('h2').html("Content Added to DOM by Node.js Server");
+                //for (var i=0; i < products.length; i++) {
+                    //productSummaryHtml = mustache.to_html(productSummaryTemplate, products[i]);
+                console.log('doc email' + doc.email);
+                window.$('#profile').append("<label>" + doc.email +"</label>");
+                //}
+                res.writeHead(200, {'Content-Type': 'text/html'});
+                res.end("<!DOCTYPE html>\n" + window.$('html').html());	
+                console.log(window.$('html').text());
+	        });
+			//res.writeHeader(200, {"Content-Type": "text/html"});  
+			//res.write(html);
 		});
 
 	});
@@ -332,6 +362,7 @@ var server = restify.createServer();
 server.use(restify.queryParser()); // to support hotel?location=...
 server.use(restify.bodyParser());
 
+server.get('/landing/', api_getLanding);
 server.get('/profile/get/user/', api_getUser);
 server.get('/planner/get/hotels/', api_getHotels);
 server.get('/planner/get/roomImage/', api_getRoomImage);
