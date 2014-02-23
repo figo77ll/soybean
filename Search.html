@@ -35,9 +35,10 @@ function OnSubmitForm()
       <div data-role="content">
       		<form name="search_form" onSubmit="return OnSubmitForm();" data-ajax="false" method="POST">
 	      		<label>Where are you going?</label>
-	            <input type="text">
+	            <input type="text" name="city" value="Seattle">
 	            <label>Date:</label>
-				<input type="date">
+				<input type="date" name="arrivalDate" value="2014-06-05">
+				<input type="date" name="departureDate" value="2014-06-06">
 	            <INPUT TYPE="SUBMIT" name="Search" onClick="document.pressed=this.value" VALUE="Plan" data-theme="b">
 				<INPUT TYPE="SUBMIT" name="Search" onClick="document.pressed=this.value" VALUE="Follow" data-theme="e">
             </form>
