@@ -13,7 +13,7 @@
 <div data-role="page">
 	<div data-role="header">Hotel details</div>
 	<div data-role="content">
-	<form id="room" action="/plannerBook?hotelId={{hotelId}}&roomTypeCode={{roomTypeCode}}&name={{name}}&address={{address}}&price={{priceTotalIncludeTax}}&roomDescription={{roomDescription}}&stars={{stars}}&city={{city}}&pid={{pid}}" data-ajax="false" method="GET">
+	<form id="room" action="/plannerBook" data-ajax="false" method="POST">
 		<div id='roomslot'></div>
 		<input type="submit" data-theme="b" value="Reserve!">
 		<a href="Hotel_list.html" data-role="button">Back to List</a>
